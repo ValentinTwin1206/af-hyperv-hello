@@ -1,14 +1,16 @@
 # AF_HYPERV Hello World
 
-A minimal hello-world over Hyper-V sockets between a **Windows host** (C# client, `AF_HYPERV`) and a **WSL2 VM** (Python server, `AF_VSOCK`).
+A minimal hello-world project over virtual socket connections between a **Windows host** and a **WSL2 VM**.
 
-C# was chosen for the client as the idiomatic language for Windows/.NET system programming; Python for the server because it ships pre-installed in Ubuntu and its `socket` module supports `AF_VSOCK` natively with no build step required.
-
-## How It Works
+## About
 
 Hyper-V sockets establish a direct channel between host and VM through shared memory on the hypervisor layer — no TCP/IP, no network adapters, no DNS. As a result, **Windows Firewall rules and network policies do not apply**, making the channel reliable even in locked-down or air-gapped environments.
 
+The client is written in **C#** (`AF_HYPERV`, Windows) as the idiomatic choice for Windows/.NET system programming. The server is written in **Python** (`AF_VSOCK`, WSL2) because it ships pre-installed in Ubuntu with `AF_VSOCK` support built into the standard `socket` module.
+
 **Port mapping:** VSOCK ports map to AF_HYPERV service GUIDs using the Microsoft template `{port_as_8_hex_digits}-facb-11e6-bd58-64006a7986d3`. For example, port `5000` (`0x1388`) → `00001388-facb-11e6-bd58-64006a7986d3`.
+
+---
 
 ## Prerequisites
 
@@ -17,11 +19,13 @@ Hyper-V sockets establish a direct channel between host and VM through shared me
 - **.NET 8 SDK** on Windows
 - **Python 3.6+** in WSL2 (usually pre-installed)
 
+--- 
+
 ## Usage
 
 ### Register *AF_HYPERV Hello World*
 
-Per the [Microsoft Hyper-V Integration Services documentation](https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/make-integration-service), every AF_HYPERV socket service must be **registered in the Windows registry** before connections are permitted. Without this, `Connect()` fails with an access-denied error.
+According to the [Microsoft Hyper-V Integration Services documentation](https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/make-integration-service), every `AF_HYPERV` socket service must be **registered in the Windows registry** before connections are permitted. Without this, `Connect()` fails with an access-denied error.
 
 Run in an **elevated PowerShell** (the script self-elevates via UAC if needed):
 
@@ -66,13 +70,12 @@ b99e7037-a1a0-4c86-98e0-bbbb2f1256aa
     VM,                         Running, b99e7037-a1a0-4c86-98e0-bbbb2f1256aa, WSL
 ```
 
-#### Start the Python server in WSL2
+#### Run the Server in WSL2
 
-In a WSL2 terminal:
+Open a terminal inside your WSL distribution and run the `server.py`:
 
 ```bash
-cd /{path_to_project}/af-hyperv-hello/src/server
-python3 server.py
+python3 /{path_to_project}/af-hyperv-hello/src/server/server.py
 ```
 
 ```
@@ -81,7 +84,7 @@ Waiting for connection from Windows host...
 Press Ctrl+C to stop.
 ```
 
-#### Run the C# client on Windows
+#### Run the Client on Windowa
 
 From the repo root, passing the GUID from `hcsdiag list`:
 
@@ -115,9 +118,13 @@ This is a **one-time setup** per machine. To remove it:
 .\scripts\Register-HvService.ps1 -Unregister
 ```
 
+---
+
 ## License
 
-Hello AF_HYPERV is released under the [Apache 2.0](LICENSE.MD) license.
+The *AF_HYPERV Hello World* project is released under the [Apache 2.0](LICENSE.MD) license.
+
+---
 
 ## Troubleshooting
 
